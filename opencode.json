@@ -1,0 +1,18 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "contractguard": {
+        "type": "local",
+        "command": [
+          "C:\\Users\\acer\\miniconda3\\envs\\genAI\\python.exe",
+          "D:\\PROJECTS\\ContractGuard\\service\\main.py"
+        ],
+        "cwd": "D:\\PROJECTS\\ContractGuard",
+        "environment": {
+          "PYTHONUNBUFFERED": "1"
+        }
+      }
+    }
+  }
+}
