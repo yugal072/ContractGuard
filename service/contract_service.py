@@ -2,6 +2,7 @@ import tempfile
 import json
 import yaml
 import subprocess
+from typing import Optional
 from pathlib import Path
 
 from models.contract_models import BreakingChangeRequest, BreakingChangeResponse, BreakingSummary, BreakingChange
@@ -80,22 +81,48 @@ class ContractService:
         )
         return changes, summary
         
-    def check_breaking_changes(self, request: BreakingChangeRequest)->BreakingChangeResponse:
+    def check_breaking_changes(self, request: BreakingChangeRequest, contract_title:Optional[str], mode:str="breaking")->BreakingChangeResponse:
+        if mode not in {"breaking", "diff"}:
+            raise ValueError("mode must be 'breaking' or 'diff'")
+        
         old_path = self._write_spec_to_temp(request.old_spec)
         new_path = self._write_spec_to_temp(request.new_spec)
         try:
-            result = subprocess.run(
+            # 1. oasdiff breaking
+            breaking_res = subprocess.run(
                 ["oasdiff", "breaking", "--format", "json", str(old_path), str(new_path)],
                 capture_output=True, text=True, timeout=60
             )
-            if result.returncode !=0:
-                raise RuntimeError(f"oasdiff failed (code {result.returncode}): {result.stderr}")
+            if breaking_res.returncode !=0:
+                raise RuntimeError(f"oasdiff failed (code {breaking_res.returncode}): {breaking_res.stderr}")
                 
-            changes, summary = self._parse_oasdiff_output(result.stdout or "[]")
+            changes, summary = self._parse_oasdiff_output(breaking_res.stdout or "[]")
+            
+            # 2. Run oasdiff only if diff mode is explicitly requested
+            diff_data= None
+            if mode == "diff":
+                diff_res = subprocess.run(
+                    ["oasdiff", "diff", "--format", "json", str(old_path), str(new_path)],
+                    capture_output=True, text=True, timeout=60
+                )
+                if diff_res.returncode!=0:
+                    raise RuntimeError(f"oasdiff diff failed: {diff_res.stderr}")
+                diff_data= json.loads(diff_res.stdout or "{}")
+            
+            # 3. Connect to Consumer Impace Engine
+            impacted_consumers=[]
+            if changes and contract_title:
+                from service.impact_engine import ImpactEngine
+                impact_engine = ImpactEngine()
+                impact_res = impact_engine.analyze_impact(contract_title, changes)
+                impacted_consumers = impact_res.impacted_consumers
+                
             return BreakingChangeResponse(
                 breaking=len(changes) > 0,
                 changes=changes,
-                summary=summary
+                summary=summary,
+                diff=diff_data,
+                impacted_consumers=impacted_consumers
             )
         finally:
             old_path.unlink(missing_ok=True)
