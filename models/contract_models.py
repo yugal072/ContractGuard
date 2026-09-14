@@ -16,8 +16,24 @@ class BreakingSummary(BaseModel):
     critical: int
     high:int
     low: int
-    
+  
+class ImpactConsumerDetail(BaseModel):
+    consumer_name: str
+    type:str
+    criticality:str
+    endpoint:str
+    field:str 
+    usage_description: Optional[str]=None
+    change_category:str 
+    change_message:str 
+      
 class BreakingChangeResponse(BaseModel):
     breaking: bool
     changes: list[BreakingChange]
     summary: BreakingSummary
+    diff: Optional[dict] = None
+    impacted_consumers: list[ImpactConsumerDetail] = Field(default_factory=list)
+    
+class ConsumerImpactResponse(BaseModel):
+    has_impact:bool
+    impacted_consumers:list[ImpactConsumerDetail]
