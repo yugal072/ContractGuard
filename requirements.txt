@@ -2,3 +2,9 @@ pyyaml
 mcp 
 pydantic 
 oasdiff
+sqlalchemy
+psycopg2-binary
+python-dotenv
+fastapi
+email-validator
+uvicorn
