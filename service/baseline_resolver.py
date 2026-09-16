@@ -23,15 +23,9 @@ log = logging.getLogger(__name__)
 class GitBase(BaseModel):
     spec: Optional[str]
     
-class DbBase(BaseModel):
-    spec: str
-    source: str
-    version: str
-    description: Optional[str]
-    
 class BaselineResolver:
     def resolve(self, 
-                contract:str, 
+                contract:str,
                 version: Optional[str] = None, 
                 baseline: Optional[str] = "main")->str:
         if ":" in contract:
