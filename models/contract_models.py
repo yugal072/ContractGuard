@@ -37,3 +37,18 @@ class BreakingChangeResponse(BaseModel):
 class ConsumerImpactResponse(BaseModel):
     has_impact:bool
     impacted_consumers:list[ImpactConsumerDetail]
+    
+# Payload Validation
+class PayloadValidationRequest(BaseModel):
+    spec:str = Field(min_length=20)
+    path:str
+    method:str
+    payload:dict
+    
+class ValidationErrorDetail(BaseModel):
+    field: str
+    message: str
+    
+class PayloadValidationResponse(BaseModel):
+    valid: bool
+    errors: list[ValidationErrorDetail] = Field(default_factory=list)
