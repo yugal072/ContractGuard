@@ -11,6 +11,7 @@ from models.contract_models import BreakingChangeRequest  # now works
 from service.contract_service import ContractService
 from tools.contract_tools import *  # noqa: F401
 from service.trial import mcp
+from tools.payload_tools import *
 
 if __name__ == "__main__":
     mcp.run()
